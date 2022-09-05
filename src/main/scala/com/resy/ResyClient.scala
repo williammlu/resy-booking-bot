@@ -181,6 +181,7 @@ class ResyClient(resyApi: ResyApi) {
       case Failure(_) if resTimeType.nonEmpty =>
         findReservationTime(reservationTimes, resTimeType.tail)
       case _ =>
+        println(cantFindResMsg)
         Failure(new RuntimeException(cantFindResMsg))
     }
   }

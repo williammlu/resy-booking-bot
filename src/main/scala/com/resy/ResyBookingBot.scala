@@ -12,29 +12,31 @@ object ResyBookingBot {
   private val resyKeys = ResyKeys(
     // Your user profile API key which can be found via your browser web console in your headers
     // called "authorization"
-    apiKey = ???,
+    apiKey = "insert",
     // Your user profile authentication token which can be found via your browser web console in
     // your headers called "x-resy-auth-token"
-    authToken = ???
+    authToken = "insert"
   )
 
   private val resDetails = ReservationDetails(
     // Date of the reservation in YYYY-MM-DD format
-    date = ???,
+    date = "2022-08-29",
     // Size of the party reservation
-    partySize = ???,
+    partySize = 3,
     // Unique identifier of the restaurant where you want to make the reservation
-    venueId = ???,
+    venueId = 1505, // currently pointing to Don Angie
     // Priority list of reservation times and table types. Time is in military time HH:MM:SS format.
     // If no preference on table type, then simply don't set it.
-    resTimeTypes = ???
+    // If you provide a list reservation times, it won't snipe if there isn't
+    // any availability. Err on the side of too many options.
+    resTimeTypes = Seq(ReservationTimeType("19:00:00"), ReservationTimeType("19:30:00"), ReservationTimeType("19:45:00"), ReservationTimeType("19:15:00"), ReservationTimeType("20:00:00"), ReservationTimeType("20:15:00"), ReservationTimeType("20:30:00"), ReservationTimeType("18:45:00"), ReservationTimeType("18:30:00"))
   )
 
   private val snipeTime = SnipeTime(
     // Hour of the day when reservations become available and when you want to snipe
-    hours = ???,
+    hours = 6,
     // Minute of the day when reservations become available and when you want to snipe
-    minutes = ???
+    minutes = 0
   )
 
   def main(args: Array[String]): Unit = {
@@ -67,12 +69,15 @@ object ResyBookingBot {
       s"Sleeping for $hoursRemaining hours, $minutesRemaining minutes, and $secondsRemaining seconds"
     )
 
-    system.scheduler.scheduleOnce(millisUntilTomorrow millis) {
-      ResyBookingWorkflow.run(resyClient, resDetails)
-
-      println("Shutting down Resy Booking Bot at " + DateTime.now)
-      System.exit(0)
+    var loopCounter = 0.0
+    while (nextSnipeTime.getMillis > DateTime.now.getMillis) {
+      println(s"Waited for $loopCounter seconds")
+      Thread.sleep(500)
+      loopCounter += 0.5
     }
+    ResyBookingWorkflow.run(resyClient, resDetails)
+    println("Shutting down Resy Booking Bot at " + DateTime.now)
+    System.exit(0)
   }
 }
 
